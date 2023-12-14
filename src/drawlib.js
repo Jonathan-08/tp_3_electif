@@ -15,6 +15,7 @@ import * as Color from "./color.js";
    | {kind: "Square";color: Color;side : number; xCenter: number; yCenter:number }
    | {kind: "Circle";radius: number;color: Color; xCenter: number; yCenter: number}
    | {kind: "Group"; shapes : Array<Shape>}
+   | { kind: "Polygon", points: Array<{x: number; y:number}>}
    } Shape
 */
 
@@ -44,6 +45,7 @@ export function group(shapes) {
   return { kind: "Group", shapes };
 }
 
+
 /**
  * Add `dx` and `dy` respectively to the `x` and `y` of
  * the shape. Apply this to all the sub shapes if the given one
@@ -60,6 +62,12 @@ export function move(dx, dy, shape) {
     case "Circle":
       shape.xCenter += dx;
       shape.yCenter += dy;
+      break;
+    case "Polygon":
+      for(let i = 0; i < shape.points.length; i++){
+        shape.points[i].x += dx;
+        shape.points[i].y += dy;
+      }
       break;
     case "Group":
       for(let item of shape.shapes){
@@ -108,6 +116,9 @@ function render(shape, context) {
         context
       );
       break;
+    case "Polygon":
+      polygonToPath(shape.points)
+      break;
     case "Group":
       shape.shapes.forEach((shape) => render(shape, context));
       break;
@@ -154,4 +165,21 @@ function renderSquare(color, xCenter, yCenter, side, context) {
   path.closePath();
   context.fillStyle = Color.render(color);
   context.fill(path);
+}
+
+/**
+* @returns {Path2D}
+* @param {Array<{x:number;y:number}>} points
+*/
+function polygonToPath(points){
+  const path = new Path2D();
+
+  path.moveTo(points[0].x, points[0].y);
+  for(let i = 1; i < points.length; i++){
+    path.lineTo(points[i].x, points[i].y);
+  }
+  path.closePath();
+
+  return path;
+  
 }
